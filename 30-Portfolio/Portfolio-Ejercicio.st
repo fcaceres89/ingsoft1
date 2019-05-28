@@ -135,6 +135,26 @@ test09ATransacionOfAnAccountIsInPortfolioTransactions
 	self assert: (portfolio transactions includes: transaction).
 	self assert: (portfolio transactions size = 1).	! !
 
+!PortfolioTest methodsFor: 'as yet unclassified' stamp: 'LLR 5/28/2019 15:48:36'!
+test10AddingAnAccountToAPorfolioThatBelongsToPortfolioWithTheAccountThrowsAnError
+	| account account2 portfolio2 portfolio |
+	
+	account := ReceptiveAccount new.
+	account2 := ReceptiveAccount new.
+	
+	
+	portfolio := Portfolio with: account.
+	portfolio2 := Portfolio with: account2.
+	portfolio add: portfolio2.
+
+	self 
+		should: [ portfolio2 add: account. ]
+		raise: Error
+		withExceptionDo: [ :anError | self assert: anError messageText equals: Portfolio canNotAddAnExistantAccountInPortfolioErrorDescription ]
+	
+	
+	! !
+
 
 !classDefinition: #ReceptiveAccountTest category: #'Portfolio-Ejercicio'!
 TestCase subclass: #ReceptiveAccountTest
@@ -338,16 +358,30 @@ Object subclass: #Portfolio
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
-!Portfolio methodsFor: 'initialization' stamp: 'LLR 5/23/2019 20:57:05'!
+!Portfolio methodsFor: 'initialization' stamp: 'LLR 5/28/2019 14:04:14'!
 with: anAccount 
 	accounts := OrderedCollection new. 
-	accounts add: anAccount.! !
+	parents := OrderedCollection new.
+	self add: anAccount.
+	anAccount addAsAParentTo: self.! !
 
 
-!Portfolio methodsFor: 'operation' stamp: 'LLR 5/24/2019 12:45:04'!
-add: anAccount 
-	(self exists: anAccount) ifTrue: [self error: self class canNotAddAnExistantAccountInPortfolioErrorDescription ].
-	accounts add: anAccount.! !
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/27/2019 12:45:43'!
+add: anAccountorPortfolio 
+	(self exists: anAccountorPortfolio) ifTrue: [self error: self class canNotAddAnExistantAccountInPortfolioErrorDescription ].
+	accounts add: anAccountorPortfolio.
+	anAccountorPortfolio addAsAParentTo: self.
+	
+	
+	! !
+
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/28/2019 14:06:29'!
+addAsAParentTo: aPortfoliooranAccount
+	 self addParent: aPortfoliooranAccount .! !
+
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/27/2019 12:36:17'!
+addParent: aPortfolio
+	parents add: aPortfolio.! !
 
 !Portfolio methodsFor: 'operation' stamp: 'LLR 5/23/2019 20:59:24'!
 balance
@@ -356,16 +390,49 @@ balance
 	accounts do: [:anAccount | total := anAccount balance + total].
 	^ total! !
 
-!Portfolio methodsFor: 'operation' stamp: 'LLR 5/24/2019 13:05:25'!
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/28/2019 15:45:19'!
 exists: anAccount
-	| res |
+	| rootPorfolios res |
+	rootPorfolios := self rootPortfoliosFromPortfolio. 
+	
+	res:= false.
+	
+	rootPorfolios do: [:rootPortfolio | res := ((rootPortfolio existsAccountFrom: anAccount) or: res).  ].
+	^ res.
+	
+	! !
+
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/28/2019 15:33:09'!
+existsAccountFrom: anAccount
+	|res|
+	
 	res := false.
-	accounts do: [:account | res := ((account exists: anAccount) or: res).  ].
-	^ res.! !
+	accounts do: [:account | res := ((account = anAccount) or: res).  ].
+	
+	res ifTrue: [^ res].
+	
+	accounts do: [ :account | res := (res or: (account existsAccountFrom: anAccount)). ].
+	
+	^ res! !
 
 !Portfolio methodsFor: 'operation' stamp: 'LLR 5/24/2019 16:01:23'!
 hasRegistered: aTransaction
 	^ self transactions includes: aTransaction! !
+
+!Portfolio methodsFor: 'operation' stamp: 'LLR 5/28/2019 15:18:29'!
+rootPortfoliosFromPortfolio
+	|rootPortfolios|
+	
+	rootPortfolios := Set new.
+	
+	 
+	(self parents isEmpty) 
+		ifTrue: [rootPortfolios add: self]
+		ifFalse: [parents do: [:parent | rootPortfolios addAll: parent rootPortfoliosFromPortfolio]
+				].
+			
+	^ rootPortfolios
+	! !
 
 !Portfolio methodsFor: 'operation' stamp: 'LLR 5/24/2019 13:17:49'!
 transactions
@@ -375,6 +442,11 @@ transactions
 	accounts do: [:account | res addAll: (account transactions)  ].
 	
 	^ res! !
+
+
+!Portfolio methodsFor: 'as yet unclassified' stamp: 'LLR 5/28/2019 14:58:24'!
+parents
+	^parents! !
 
 "-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- "!
 
@@ -398,16 +470,39 @@ Object subclass: #ReceptiveAccount
 	poolDictionaries: ''
 	category: 'Portfolio-Ejercicio'!
 
-!ReceptiveAccount methodsFor: 'initialization' stamp: 'HernanWilkinson 7/13/2011 18:35'!
+!ReceptiveAccount methodsFor: 'initialization' stamp: 'LLR 5/27/2019 12:34:46'!
 initialize
 
 	super initialize.
-	transactions := OrderedCollection new.! !
+	transactions := OrderedCollection new.
+	parents := OrderedCollection new.! !
 
 
-!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/24/2019 13:03:03'!
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/27/2019 20:30:01'!
+addAsAParentTo: aPortfoliooranAccount
+	 ! !
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/27/2019 20:29:53'!
+addParent: aPortfolio 
+
+	! !
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/28/2019 15:45:48'!
 exists: anAccount
-	^ anAccount = self
+	|res|
+	res := (anAccount = self).	
+	
+	^ res
+	
+	! !
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/28/2019 15:48:12'!
+existsAccountFrom: anAccount
+	^ false.! !
+
+!ReceptiveAccount methodsFor: 'transactions' stamp: 'LLR 5/28/2019 15:46:34'!
+parents
+	^ OrderedCollection new.	
 	! !
 
 !ReceptiveAccount methodsFor: 'transactions' stamp: 'HernanWilkinson 7/13/2011 18:37'!
