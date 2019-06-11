@@ -1,17 +1,17 @@
-!classDefinition: #TestX category: #'TusLibros.com'!
-TestCase subclass: #TestX
+!classDefinition: #TestCart category: #'TusLibros.com'!
+TestCase subclass: #TestCart
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'TusLibros.com'!
 
-!TestX methodsFor: 'as yet unclassified' stamp: 'LLR 6/9/2019 13:13:16'!
+!TestCart methodsFor: 'as yet unclassified' stamp: 'LLR 6/9/2019 13:13:16'!
 test01ANewCartIsCreatedWithoutAnyBook
 	| cart |
 	cart := Cart initializeWith: Catalog new.
 	self assert: cart isEmpty.! !
 
-!TestX methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 10:57:28'!
+!TestCart methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 10:57:28'!
 test02TheCartHasOnlyOneBookWhenABookIsAdded
 	| aCart  aBook aCatalog |
 	aCatalog := Catalog new.
@@ -21,7 +21,7 @@ test02TheCartHasOnlyOneBookWhenABookIsAdded
 	aCart add: aBook.
 	self assert: aCart size == 1.! !
 
-!TestX methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 10:55:11'!
+!TestCart methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 10:55:11'!
 test03CanNotAddABookThatDoesNotBelongToStore
 	| aCart  aBook|
 	aCart := Cart initializeWith: Catalog new.
@@ -34,7 +34,7 @@ test03CanNotAddABookThatDoesNotBelongToStore
 	
 	! !
 
-!TestX methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 11:16:22'!
+!TestCart methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 11:16:22'!
 test04AddingTwoDifferentBooksAreListedInCart
 	| aCart  aBook aCatalog anotherBook |
 	aCatalog := Catalog new.
@@ -51,7 +51,7 @@ test04AddingTwoDifferentBooksAreListedInCart
 	self assert: aCart size == 2.
 	self assert: ((aCart list includes: aBook) and: (aCart list includes: anotherBook)).! !
 
-!TestX methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 11:18:53'!
+!TestCart methodsFor: 'as yet unclassified' stamp: 'LLR 6/11/2019 11:18:53'!
 test05AddingTwoCopiesOfTheSameBooksAreListedInCart
 	| aCart  aBook aCatalog |
 	aCatalog := Catalog new.
